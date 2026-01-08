@@ -24,11 +24,12 @@ const uploadOnCloudinary = async (localFilePath) => {
     });
     // when file upload on cloudinary successfully
     console.log(
-      "File Successfully Uploaded on Cloudinary",
+      "File Successfully Uploaded on Cloudinary:",
       cloudinaryResponse.url
     );
-    console.log(`Cloudinary Response: ${cloudinaryResponse}`);
-    return cloudinaryResponse.url;
+    // console.log("WHOLE Cloudinary Response:", cloudinaryResponse);
+    fs.unlinkSync(localFilePath); //when successfully file upload cloudianry it will delete my server
+    return cloudinaryResponse; // return cloudinary URL
   } catch (error) {
     fs.unlinkSync(localFilePath); // remove locally saves file temporary files when the successfully upload files on cloudinary
     return null;

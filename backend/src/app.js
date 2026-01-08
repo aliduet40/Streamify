@@ -25,3 +25,29 @@ app.use(
 
 app.use(express.static("public"));
 app.use(cookie_parser()); // server acess user browser access cookies and set cookies securly and safely
+
+app.get("/", (req, res) => {
+  // this is my root route
+  res.json({
+    success: true,
+    message: "Stremify API is Working.",
+    version: "1.0.0",
+  });
+});
+
+// imports the routes from routes folder
+import userRoutes from "./routes/user.route.js";
+
+// Route used as Middleware
+//declaration for routes
+app.use("/api/v1/users", userRoutes); // user routes
+
+// http://localhost:5000/api/v1/users/register
+// app.use((err, req, res, next) => {
+//   const statusCode = err.code || err.statusCode || 500;
+
+//   res.status(statusCode).json({
+//     success: false,
+//     message: err.message || "Internal Server Error",
+//   });
+// });

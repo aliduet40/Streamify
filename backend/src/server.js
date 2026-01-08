@@ -7,28 +7,30 @@ import connectDB from "./db/db.js";
 import { app } from "./app.js";
 const PORT = process.env.PORT || 5000;
 const ENVIRONMENT = process.env.NODE_ENV || "development";
-connectDB(); // whenn call this function automatically connect DB with mongoose
+//  whenn call this function automatically connect DB with mongoose
 
 // throw error when app does not listen properly
-app
-  .on("error", (error) => {
-    console.log("Express App does not properly listen:", error);
-    throw error;
-  })
+
+// app.on("error", (error) => {
+//   console.log("Express App does not properly listen:", error);
+//   throw error;
+// });
+
+// load env variables
+dotenv.config({
+  path: "./.env",
+});
+
+connectDB()
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
-      console.log(`Application environment mode:${ENVIRONMENT}`);
+      // console.log(`Application environment mode:${ENVIRONMENT}`);
     });
   })
   .catch((err) => {
     console.log("MONGO DB cannot connnected try again!!", err);
   });
-
-// load env variables
-dotenv.config({
-  path: "./env",
-});
 
 /*
 import mongoose from "mongoose"
