@@ -139,10 +139,10 @@ export const userLogin = asyncHandler(async (req, res) => {
     $or: [{ username }, { email }],
   }).select("+password");
 
-  console.log("Password type:", typeof password);
-  console.log("DB Password type:", typeof userFind.password);
-  console.log("Password:", password);
-  console.log("DB Password:", userFind.password);
+  // console.log("Password type:", typeof password);
+  // console.log("DB Password type:", typeof userFind.password);
+  // console.log("Password:", password);
+  // console.log("DB Password:", userFind.password);
   console.log("User:", userFind);
   // If user not exists
   if (!userFind) {
@@ -164,6 +164,9 @@ export const userLogin = asyncHandler(async (req, res) => {
   const loggedInUser = await User.findById(userFind._id).select(
     "-password -refreshToken"
   );
+
+  console.log("AccessToken:", accessToken);
+  console.log("RefreshToken:", refreshToken);
 
   // Send secure cookies only server can modify the cookies
   const options = {
@@ -202,8 +205,8 @@ export const logoutUser = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .clearCookie(AccessToken, options)
-    .clearCookie(RefreshToken, options)
+    .clearCookie("AccessToken", options) // when clear cookies use quotes use as string not variable
+    .clearCookie("RefreshToken", options) // when clear cookies use quotes use as string not variable
     .json(new ApiResponse(200, {}, "User logout Successfully"));
 });
 
