@@ -5,14 +5,15 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken";
 
 const generateAccessTokenAndRefreshToken = async (id) => {
   const user = await User.findById(id);
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
   user.refreshToken = refreshToken; // refresh token add in user table
-  // const savedUser = await user.save({ validateBeforeSave: false }); // "Database me save kar do, validation check mat karo
-  // console.log(savedUser);
+  const savedUser = await user.save({ validateBeforeSave: false }); // "Database me save kar do, validation check mat karo
+  console.log(savedUser);
   return { accessToken, refreshToken };
 };
 
@@ -208,6 +209,52 @@ export const logoutUser = asyncHandler(async (req, res) => {
     .clearCookie("AccessToken", options) // when clear cookies use quotes use as string not variable
     .clearCookie("RefreshToken", options) // when clear cookies use quotes use as string not variable
     .json(new ApiResponse(200, {}, "User logout Successfully"));
+});
+
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken =
+    req.cookies.refreshToken || req.body.refreshToken;
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "UnAuthorized Request or Invalid Request");
+  }
+
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    const user = await User.findById(decodedToken?._id);
+    if (!user) {
+      throw new ApiError(401, "Invalid Refresh Token");
+    }
+
+    if (incomingRefreshToken !== user?.refreshToken) {
+      throw new ApiError(401, "Refresh token is expires or already used");
+    }
+
+    const { accessToken, newRefreshToken } =
+      await generateAccessTokenAndRefreshToken(user?._id);
+
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+
+    return res
+      .status(200)
+      .cookie("AccessToken", accessToken, options)
+      .cookie("RefreshToken", newRefreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, NewRefreshToken: newRefreshToken },
+          "Your Access Token is Refresh"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid Refresh Token");
+  }
 });
 
 // The 409 Conflict status code indicates that the server could not complete the client's request because it conflicts with the current state of the target resource. This error is commonly encountered in situations involving version control, concurrent edits, or attempts to create a duplicate resource.

@@ -56,10 +56,9 @@ const userSchema = new mongoose.Schema(
 );
 
 // pre basically middleware function it calls just before the user data save it (Pre Hook)
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next(); // password modify return safely no hashing
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return; // password modify return safely no hashing
   this.password = await bcrypt.hash(this.password, 12);
-  next();
 });
 
 // userSchema.pre("save", async function (next) {
