@@ -11,8 +11,8 @@ const generateAccessTokenAndRefreshToken = async (id) => {
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
   user.refreshToken = refreshToken; // refresh token add in user table
-  const savedUser = await user.save({ validateBeforeSave: false }); // "Database me save kar do, validation check mat karo
-  console.log(savedUser);
+  // const savedUser = await user.save({ validateBeforeSave: false }); // "Database me save kar do, validation check mat karo
+  // console.log(savedUser);
   return { accessToken, refreshToken };
 };
 
@@ -128,14 +128,22 @@ export const userLogin = asyncHandler(async (req, res) => {
   // 8. refresh token saves as sessions or cookies from user browser
 
   const { username, email, password } = req.body;
-  if (!(username || email)) {
-    throw new ApiError(
-      400,
-      "Username and email does not provide.Please provide valid username and email"
-    );
+  if (!password || !(username || email)) {
+    throw new ApiError(400, "Username/email and password are required");
   }
-  const userFind = await User.findOne({ $or: [{ username }, { email }] }); // find user in db by email and username
+  // const userFind = await User.findOne({
+  //   $or: [{ username }, { email }].select("+password"),
+  // }); // find user in db by email and username
 
+  const userFind = await User.findOne({
+    $or: [{ username }, { email }],
+  }).select("+password");
+
+  console.log("Password type:", typeof password);
+  console.log("DB Password type:", typeof userFind.password);
+  console.log("Password:", password);
+  console.log("DB Password:", userFind.password);
+  console.log("User:", userFind);
   // If user not exists
   if (!userFind) {
     throw new ApiError(404, "User does not exits");
@@ -146,7 +154,7 @@ export const userLogin = asyncHandler(async (req, res) => {
   const isPasswordValid = await userFind.isPaswordCorrect(password);
 
   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid Usre Credentials:");
+    throw new ApiError(401, "Invalid User Credentials:");
   }
 
   // if user passowrd correct then it will create JWT token
@@ -154,7 +162,7 @@ export const userLogin = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } =
     await generateAccessTokenAndRefreshToken(userFind._id);
   const loggedInUser = await User.findById(userFind._id).select(
-    "-password - refreshToken"
+    "-password -refreshToken"
   );
 
   // Send secure cookies only server can modify the cookies
@@ -165,12 +173,12 @@ export const userLogin = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .cookie("AccessToken:", accessToken, options) // send the cookie
-    .cookie("RefreshToken:", refreshToken, options) // send the cookie
+    .cookie("AccessToken", accessToken, options) // send the cookie
+    .cookie("RefreshToken", refreshToken, options) // send the cookie
     .json(
       new ApiResponse(
         200,
-        { loggedUser: loggedInUser, accessToken, refreshToken },
+        { loggedInUser: loggedInUser, accessToken, refreshToken },
         "User Login Successfully."
       )
     );
