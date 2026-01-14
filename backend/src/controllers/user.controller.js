@@ -257,4 +257,105 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
+export const forgotPassword = asyncHandler(async (req, res) => {
+  // ye check krna k lea user loggedIn h ya nhi uske lea middleware bnaya h hmne agr user loggedIn nhi h to password forgot ka sense nhi bnta
+  const { oldPassword, newPassword } = req.body;
+  // find user who change the password agr wo password change kr rh mtlb wo loggedIn user
+  const user = await User.findById(req.user?._id);
+  // Checked user old password or verify password is not found it will throw error
+  const isPasswordCorrect = await user.isPaswordCorrect(oldPassword);
+  // if old password wrong throw error
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Authentication Failed Invalid Password.try agian");
+  }
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false }); // password field modify h ab db password save kr rh
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password Changed Successfully"));
+});
+
+export const getCurrentUser = asyncHandler(async (req, res) => {
+  return res.status(200).json(200, req.user, "Fetch User Info Successfully");
+});
+
+export const updateUserProfile = asyncHandler(async (req, res) => {
+  const { fullname, email } = req.body;
+  if (!fullname || !email) {
+    throw new ApiError("Fullname and email are required.");
+  }
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: { fullname: fullname, email },
+    },
+    { new: true } // return new updated records
+  ).select("-password -refreshToken"); // fetch user in db all info except password and refreshToken
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { updatedUserProfile: user },
+        "Update User Profile Successfully"
+      )
+    );
+});
+
+export const updateAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path;
+  // if avatarLocalPath not exist
+  if (!avatarLocalPath) {
+    throw new ApiError(
+      400,
+      "Profile picture is required.Please upload an avatar."
+    );
+  }
+  const avatarUrl = await uploadOnCloudinary(avatarLocalPath);
+  // if file not uploaded on cloudinary
+  if (!avatarUrl.url) {
+    throw new ApiError(
+      400,
+      "Profile picture update failed. Please try again or upload a different image."
+    );
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: avatar.url,
+      },
+    },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Update User Avatar Successfully"));
+});
+
+// Update User Cover Image
+export const updateCoverImage = asyncHandler(async (req, res) => {
+  const coverImageLocalPath = req.file?.path;
+  let imageUrl = "";
+  // if image local path exist because coverimage is optional
+  if (coverImageLocalPath) {
+    imageUrl = await uploadOnCloudinary(coverImageLocalPath);
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: imageUrl.url,
+      },
+    },
+    { new: true }
+  ).select("-password");
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Update user cover image successfully"));
+});
+
 // The 409 Conflict status code indicates that the server could not complete the client's request because it conflicts with the current state of the target resource. This error is commonly encountered in situations involving version control, concurrent edits, or attempts to create a duplicate resource.
