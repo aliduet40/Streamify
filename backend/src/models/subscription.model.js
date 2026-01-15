@@ -7,7 +7,7 @@ const subscriptionSchema = new mongoose.Schema(
       ref: "User",
     },
     channel: {
-      type: mongoose.Schema.Types.ObjectId, // jsko user subscriber kr rh channel bhi user h
+      type: mongoose.Schema.Types.ObjectId, // jsko user subscriber kr rh channel bhi user h jbhi to hn commnets like krte h
       ref: "User",
     },
   },
