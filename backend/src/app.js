@@ -47,14 +47,15 @@ app.get("/", (req, res) => {
 
 // imports the routes from routes folder
 import userRoutes from "./routes/user.route.js";
+import authRoutes from "./routes/auth.route.js";
 
 // Route used as Middleware
 //declaration for routes
-
-app.use("/api/v1/users", rate_limiting);
+app.use(rate_limiting);
 app.use("/api/v1/users", userRoutes); // user routes
-
+app.use("/api/v1/auth", authRoutes); // auth routes
 // http://localhost:5000/api/v1/users/register
+// http://localhost:5000/api/v1/auth/refresh-token
 // app.use((err, req, res, next) => {
 //   const statusCode = err.code || err.statusCode || 500;
 
