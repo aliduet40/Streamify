@@ -9,7 +9,7 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true,
-  })
+  }),
 ); // app.use in middleware and config settings most of the times
 
 // rate limit for auth/login
@@ -23,14 +23,14 @@ const rate_limiting = ratelimit({
 app.use(
   express.json({
     limit: "20KB",
-  })
+  }),
 ); // means my server accepting JSON DATA or allow JSON
 
 app.use(
   express.urlencoded({
     extended: true,
     limit: "20KB",
-  })
+  }),
 ); // means my server accepting data from URL extended means nested OBJECT
 app.use(helmet());
 app.use(express.static("public"));
@@ -54,8 +54,7 @@ import authRoutes from "./routes/auth.route.js";
 app.use(rate_limiting);
 app.use("/api/v1/users", userRoutes); // user routes
 app.use("/api/v1/auth", authRoutes); // auth routes
-// http://localhost:5000/api/v1/users/register
-// http://localhost:5000/api/v1/auth/refresh-token
+
 // app.use((err, req, res, next) => {
 //   const statusCode = err.code || err.statusCode || 500;
 
